@@ -10,59 +10,58 @@ from random import randint
 from scipy import stats
 from progress.bar import Bar
 
-im = Image.open('google.jpg')
-(width, height) = im.size
-desired_height = 50
-resize_factor = desired_height / height
-im = im.resize((int(width * resize_factor), int(height * resize_factor)))
-(width, height) = im.size
+def get_dominant_colors(image_name, confidence, desired_height):
+    im = Image.open(image_name)
+    (width, height) = im.size
+    resize_factor = desired_height / height
+    im = im.resize((int(width * resize_factor), int(height * resize_factor)))
+    (width, height) = im.size
 
-confidence = 50
-pixel_list = []
+    pixel_list = []
 
-if confidence == 100:
-    bar = Bar('Processing', max=height * width)
-    for row in range(height):
-        for col in range(width):
-            (r, g, b) = im.getpixel((col, row))
-            if r < 250 or g < 250 or b < 250:
-                pixel_list.append(im.getpixel((col, row)))
-                im.putpixel((col, row), (127, 255, 0))
-            else:
-                im.putpixel((col, row), (255, 0, 0))
-            bar.next()
-    im.save('checked.png')
-    bar.finish()
-else:
-    iterations = confidence / 100 * width * height
-    iteration = 0
-    checked_coordinates = []
-    bar = Bar('Processing', max=iterations)
-    max_iterations = 50
-    while iteration < iterations:
-        inner_iterations = 0
-        while True:
-            random_coordinates = (randint(1, width - 1), randint(1, height - 1))
-            if inner_iterations > max_iterations:
-                break
-            if random_coordinates not in checked_coordinates:
-                (r, g, b) = im.getpixel(random_coordinates)
-                if r < 250 and g < 250 and b < 250:
-                    break
+    if confidence == 100:
+        bar = Bar('Processing', max=height * width)
+        for row in range(height):
+            for col in range(width):
+                (r, g, b) = im.getpixel((col, row))
+                if r < 250 or g < 250 or b < 250:
+                    pixel_list.append(im.getpixel((col, row)))
+                    im.putpixel((col, row), (127, 255, 0))
                 else:
-                    checked_coordinates.append(random_coordinates)
-                    im.putpixel(random_coordinates, (255, 0, 0))
-            inner_iterations = inner_iterations + 1
-        pixel_list.append(im.getpixel(random_coordinates))
-        checked_coordinates.append(random_coordinates)
-        im.putpixel(random_coordinates, (127, 255, 0))
-        iteration = iteration + 1
-        bar.next()
-    bar.finish()
-    im.save('checked.png')
+                    im.putpixel((col, row), (255, 0, 0))
+                bar.next()
+        im.save('checked.png')
+        bar.finish()
+    else:
+        iterations = confidence / 100 * width * height
+        iteration = 0
+        checked_coordinates = []
+        bar = Bar('Processing', max=iterations)
+        max_iterations = 50
+        while iteration < iterations:
+            inner_iterations = 0
+            while True:
+                random_coordinates = (randint(1, width - 1), randint(1, height - 1))
+                if inner_iterations > max_iterations:
+                    break
+                if random_coordinates not in checked_coordinates:
+                    (r, g, b) = im.getpixel(random_coordinates)
+                    if r < 250 and g < 250 and b < 250:
+                        break
+                    else:
+                        checked_coordinates.append(random_coordinates)
+                        im.putpixel(random_coordinates, (255, 0, 0))
+                inner_iterations = inner_iterations + 1
+            pixel_list.append(im.getpixel(random_coordinates))
+            checked_coordinates.append(random_coordinates)
+            im.putpixel(random_coordinates, (127, 255, 0))
+            iteration = iteration + 1
+            bar.next()
+        bar.finish()
+        im.save('checked.png')
 
-colors = np.array(pixel_list)
-
+    colors = np.array(pixel_list)
+    return colors
 
 def show_colors_plot(colors):
     fig = plt.figure()
@@ -98,7 +97,6 @@ def show_color_histogram(colors):
     # descending order sorting as per frequency count
     colors = colors[(-hist).argsort()]
     hist = hist[(-hist).argsort()]
-    print(colors)
 
     # creating empty chart
     chart = np.zeros((50, 500, 3), np.uint8)
@@ -124,5 +122,6 @@ def show_color_histogram(colors):
     plt.show()
 
 
+colors = get_dominant_colors(image_name='google.jpg',confidence=50, desired_height=50)
 show_colors_plot(colors)
 show_color_histogram(colors)
