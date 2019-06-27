@@ -10,11 +10,14 @@ from random import randint
 from scipy import stats
 from progress.bar import Bar
 
+
 def get_dominant_colors(image_name, confidence, desired_height):
     im = Image.open(image_name)
+    im_copy = Image.open(image_name)
     (width, height) = im.size
     resize_factor = desired_height / height
     im = im.resize((int(width * resize_factor), int(height * resize_factor)))
+    im_copy = im_copy.resize((int(width * resize_factor), int(height * resize_factor)))
     (width, height) = im.size
 
     pixel_list = []
@@ -26,11 +29,11 @@ def get_dominant_colors(image_name, confidence, desired_height):
                 (r, g, b) = im.getpixel((col, row))
                 if r < 250 or g < 250 or b < 250:
                     pixel_list.append(im.getpixel((col, row)))
-                    im.putpixel((col, row), (127, 255, 0))
+                    im_copy.putpixel((col, row), (127, 255, 0))
                 else:
-                    im.putpixel((col, row), (255, 0, 0))
+                    im_copy.putpixel((col, row), (255, 0, 0))
                 bar.next()
-        im.save('checked.png')
+        im_copy.save('checked.png')
         bar.finish()
     else:
         iterations = confidence / 100 * width * height
@@ -40,28 +43,27 @@ def get_dominant_colors(image_name, confidence, desired_height):
         max_iterations = 50
         while iteration < iterations:
             inner_iterations = 0
-            while True:
+            while inner_iterations < max_iterations:
                 random_coordinates = (randint(1, width - 1), randint(1, height - 1))
-                if inner_iterations > max_iterations:
-                    break
                 if random_coordinates not in checked_coordinates:
                     (r, g, b) = im.getpixel(random_coordinates)
                     if r < 250 and g < 250 and b < 250:
                         break
                     else:
                         checked_coordinates.append(random_coordinates)
-                        im.putpixel(random_coordinates, (255, 0, 0))
+                        im_copy.putpixel(random_coordinates, (255, 0, 0))
                 inner_iterations = inner_iterations + 1
             pixel_list.append(im.getpixel(random_coordinates))
             checked_coordinates.append(random_coordinates)
-            im.putpixel(random_coordinates, (127, 255, 0))
+            im_copy.putpixel(random_coordinates, (127, 255, 0))
             iteration = iteration + 1
             bar.next()
         bar.finish()
-        im.save('checked.png')
+        im_copy.save('checked.png')
 
     colors = np.array(pixel_list)
     return colors
+
 
 def show_colors_plot(colors):
     fig = plt.figure()
@@ -122,6 +124,6 @@ def show_color_histogram(colors):
     plt.show()
 
 
-colors = get_dominant_colors(image_name='google.jpg',confidence=50, desired_height=50)
+colors = get_dominant_colors(image_name='google.png', confidence=100, desired_height=50)
 show_colors_plot(colors)
 show_color_histogram(colors)
