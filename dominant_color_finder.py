@@ -9,6 +9,7 @@ import numpy as np
 from random import randint
 from scipy import stats
 from progress.bar import Bar
+import argparse
 
 
 def get_dominant_colors(image_name, confidence, desired_height):
@@ -124,6 +125,13 @@ def show_color_histogram(colors):
     plt.show()
 
 
-colors = get_dominant_colors(image_name='google.png', confidence=100, desired_height=50)
-show_colors_plot(colors)
-show_color_histogram(colors)
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--image", required=True, help="path to image")
+    ap.add_argument("-c", "--confidence", type=int, default=100, help="percent of pixels to be checked")
+    ap.add_argument("-d", "--desiredheight", type=int, default=50, help="height to resize the image to")
+    args = vars(ap.parse_args())
+
+    colors = get_dominant_colors(image_name=args['image'], confidence=args['confidence'], desired_height=args['desiredheight'])
+    # show_colors_plot(colors)
+    show_color_histogram(colors)
